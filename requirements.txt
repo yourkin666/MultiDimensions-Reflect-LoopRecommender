@@ -1,0 +1,9 @@
+sanic
+sanic-ext
+pydantic
+httpx[http2]
+python-dotenv
+redis
+asyncpg
+celery
+uvicorn 
