@@ -1,52 +1,37 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+多维度反思循环推荐系统 - 主入口
+"""
+
 import os
-from sanic import Sanic, Request, json
+from datetime import datetime
 from dotenv import load_dotenv
+from sanic import Sanic
+from sanic_ext import Extend
 
-from src.utils.llm_client import LLMClient
-from src.core.data_processor import DataProcessor
-from src.core.evaluator import Evaluator
-from src.core.reflection_engine import ReflectionEngine
-from src.api.recommendation_api import setup_recommendation_api
+from src.api.recommendation_api import setup_routes
+from src.utils.logger_config import setup_logger
 
-# 加载 .env 文件中的环境变量
+# 加载环境变量
 load_dotenv()
 
-# 初始化 Sanic 应用
-app = Sanic("ReflectionRecommender")
+# 设置日志
+log_file = os.getenv("LOG_FILE", f"logs/app_{datetime.now().strftime('%Y%m%d')}.log")
+setup_logger(log_level=os.getenv("LOG_LEVEL", "INFO"), log_file=log_file)
 
-# --- 生命周期事件 ---
-@app.listener('before_server_start')
-async def setup_services(app: Sanic, loop):
-    """
-    在服务器启动前，初始化所有服务和引擎
-    """
-    print("Initializing services...")
-    # 实例化所有核心组件
-    app.ctx.llm_client = LLMClient(api_key=os.getenv("OPENAI_API_KEY"))
-    app.ctx.data_processor = DataProcessor(llm_client=app.ctx.llm_client)
-    app.ctx.evaluator = Evaluator(llm_client=app.ctx.llm_client)
-    app.ctx.engine = ReflectionEngine(
-        llm_client=app.ctx.llm_client,
-        evaluator=app.ctx.evaluator
-    )
-    print("Services initialized.")
+# 创建Sanic应用
+app = Sanic("MultiDimensionReflectRecommender")
+Extend(app)
 
-@app.listener('after_server_stop')
-async def cleanup_services(app: Sanic, loop):
-    """
-    在服务器关闭后，清理资源
-    """
-    print("Closing services...")
-    await app.ctx.llm_client.close()
-    print("Services closed.")
-
-# --- 注册 API ---
-setup_recommendation_api(app)
-
-# --- 健康检查端点 ---
-@app.get("/")
-async def health_check(request: Request):
-    return json({"status": "ok", "message": "Welcome to the Reflection Recommender API!"})
+# 设置路由
+setup_routes(app)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=True, auto_reload=True) 
+    app.run(
+        host="0.0.0.0",
+        port=int(os.getenv("PORT", 8000)),
+        debug=bool(os.getenv("DEBUG", False)),
+        auto_reload=bool(os.getenv("AUTO_RELOAD", False))
+    ) 

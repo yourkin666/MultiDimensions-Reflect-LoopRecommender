@@ -6,4 +6,18 @@ python-dotenv
 redis
 asyncpg
 celery
-uvicorn 
+uvicorn
+# 大模型交互
+openai>=1.0.0
+langchain>=0.1.0
+# 数据处理与分析
+pandas
+numpy
+# 向量数据库
+faiss-cpu
+# 评估指标
+scikit-learn
+# 异步支持
+aiohttp
+# 类型提示
+typing_extensions 
